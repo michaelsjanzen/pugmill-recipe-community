@@ -46,7 +46,8 @@ export async function GET(
 
     await db
       .update(pluginCommunityRecipes)
-      .set({ downloadCount: sql`${pluginCommunityRecipes.downloadCount} + 1` })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .set({ download_count: sql`download_count + 1` } as any)
       .where(eq(pluginCommunityRecipes.id, recipeId));
   } catch {
     // Never block the redirect on a tracking failure
