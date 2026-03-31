@@ -99,9 +99,16 @@ Add `"community"` to the `activePlugins` array in `pugmill.config.json`:
 }
 ```
 
-### Step 7 — Register the plugin import
+### Step 7 — Register the plugin in the registry
 
-Open `src/lib/plugin-loader.ts` and add a static import for the community plugin following the existing pattern for other plugins.
+Open `src/lib/plugin-registry.ts`. The file has a comment block at the top with explicit install instructions. Follow Steps 2 and 3 in that comment:
+
+**Step 2** — add a static import near the other plugin imports:
+```ts
+import { communityPlugin } from "../../plugins/community/index";
+```
+
+**Step 3** — add `communityPlugin` to the `ALL_PLUGINS` array.
 
 ### Step 8 — Run the schema migration
 
