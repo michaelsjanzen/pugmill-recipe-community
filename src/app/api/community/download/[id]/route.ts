@@ -3,8 +3,9 @@ import { db } from "@/lib/db";
 import {
   pluginCommunityRecipes,
   pluginCommunityDownloadEvents,
+  incrementDownloadCount,
 } from "../../../../../../plugins/community/schema";
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { getCommunityUser } from "@/lib/community-auth";
 
 export async function GET(
@@ -44,11 +45,7 @@ export async function GET(
       version: recipe.latestVersion ?? null,
     } as typeof pluginCommunityDownloadEvents.$inferInsert);
 
-    await db
-      .update(pluginCommunityRecipes)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .set({ download_count: sql`download_count + 1` } as any)
-      .where(eq(pluginCommunityRecipes.id, recipeId));
+    await incrementDownloadCount(recipeId);
   } catch {
     // Never block the redirect on a tracking failure
   }

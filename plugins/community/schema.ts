@@ -1,3 +1,5 @@
+import { db } from "../../src/lib/db";
+import { sql } from "drizzle-orm";
 import {
   pgTable,
   serial,
@@ -96,3 +98,15 @@ export const pluginCommunityContributionScores = pgTable(
     lastCalculatedAt: timestamp("last_calculated_at").defaultNow().notNull(),
   }
 );
+
+// ─── Typed helpers ────────────────────────────────────────────────────────────
+// Use raw SQL for counter increments. Drizzle's .set() type inference does not
+// fully resolve when the plugin schema is imported across a plugin boundary
+// outside src/, causing TS build failures in the host project. Raw SQL sidesteps
+// this without type assertions or eslint suppressions.
+
+export function incrementDownloadCount(recipeId: number) {
+  return db.execute(
+    sql`UPDATE plugin_community_recipes SET download_count = download_count + 1 WHERE id = ${recipeId}`
+  );
+}
