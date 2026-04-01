@@ -1,37 +1,33 @@
-# Pugmill Community Recipe
-
-**Type:** Plugin
-**Version:** 0.2.0
-**Requires:** Pugmill CMS v0.2.0+
-**Author:** michaeljanzen
-**Repository:** https://github.com/pugmillcms/recipe-community
-
-Adds a public recipe registry to your Pugmill site. Community members sign in with GitHub to browse, submit, and manage plugins, themes, workflows, and PNA cartridges built for Pugmill CMS.
-
+---
+name: pugmill-recipe-community
+description: >
+  Adds a public recipe registry to your Pugmill site. Community members sign
+  in with GitHub to browse, submit, and manage plugins, themes, and other
+  extensions built for Pugmill CMS. Installs 8 database tables prefixed
+  plugin_community_, public routes at /recipes and /community/account, API
+  routes for GitHub OAuth and download tracking, and a shared auth library
+  at src/lib/community-auth.ts. Requires a GitHub OAuth App and the jose
+  npm package. Tables are created automatically via schema.migrate() on
+  first cold start — no external migration scripts needed.
+compatibility: "Pugmill CMS v0.2+. Plugin recipe. Has routes and lib files. Requires COMMUNITY_GITHUB_CLIENT_ID, COMMUNITY_GITHUB_CLIENT_SECRET, and COMMUNITY_SESSION_SECRET secrets."
+license: MIT
+metadata:
+  type: plugin
+  pugmill-version: "0.2"
+  has-routes: "true"
+  has-migrations: "false"
 ---
 
-## What this recipe installs
+Adds a public recipe registry to your Pugmill site where community members can sign in with GitHub to browse, submit, and manage Pugmill extensions.
 
-- `/recipes` — browseable registry with type filters and pagination
-- `/recipes/submit` — GitHub-authenticated submission form
-- `/recipes/{owner}/{repo}` — recipe detail page with README rendering, download tracking, and owner controls
-- `/community/account` — member profile (GitHub avatar, tier, score)
-- GitHub OAuth sign-in at `/api/community/auth/github`
-- Admin plugin page at Admin > Plugins > Community (OAuth status + navigation setup)
-- 8 database tables (all prefixed `plugin_community_`)
-- Download event and star tracking
-
----
-
-## Prerequisites
-
-- Pugmill CMS v0.2.0 installed and running
-- A GitHub OAuth App (see Step 2 below)
-- `jose` npm package
+**Plugin id:** `community`
+**Repository:** https://github.com/michaelsjanzen/pugmill-recipe-community
 
 ---
 
 ## Installation
+
+Read `PLUGIN_AUTHORING.md` in your Pugmill install for the full plugin installation contract. This recipe adds routes and a shared lib file on top of the standard 4-step contract.
 
 ### Step 1 — Install the `jose` dependency
 
@@ -49,9 +45,9 @@ npm install jose
 3. Click **Register application**
 4. Copy the **Client ID** and generate a **Client Secret**
 
-### Step 3 — Add environment variables
+### Step 3 — Add environment secrets
 
-Add to your `.env.local`:
+Add to your `.env.local` (and as platform secrets for production):
 
 ```env
 COMMUNITY_GITHUB_CLIENT_ID=your_client_id_here
@@ -65,19 +61,12 @@ Generate `COMMUNITY_SESSION_SECRET` with:
 openssl rand -base64 32
 ```
 
-### Step 4 — Copy plugin files
+### Step 4 — Copy files
 
-Copy the following directory into your Pugmill install:
-
-```
-plugins/community/  →  plugins/community/
-```
-
-### Step 5 — Copy src files
-
-Copy these files into their matching paths in your Pugmill install:
+Copy the `plugins/` and `src/` directories from this repository into the Pugmill project root, preserving the directory structure:
 
 ```
+plugins/community/                                →  plugins/community/
 src/lib/community-auth.ts                         →  src/lib/community-auth.ts
 src/app/(site)/recipes/page.tsx                   →  src/app/(site)/recipes/page.tsx
 src/app/(site)/recipes/submit/page.tsx            →  src/app/(site)/recipes/submit/page.tsx
@@ -89,36 +78,25 @@ src/app/api/community/auth/signout/route.ts       →  src/app/api/community/aut
 src/app/api/community/download/[id]/route.ts      →  src/app/api/community/download/[id]/route.ts
 ```
 
-### Step 6 — Register the plugin
+### Step 5 — Register the plugin
 
-Add `"community"` to the `activePlugins` array in `pugmill.config.json`:
+Follow steps 2 and 3 of the plugin installation contract in `PLUGIN_AUTHORING.md`:
 
-```json
-{
-  "activePlugins": ["default-widgets", "contact-form", "bot-analytics", "community"]
-}
-```
-
-### Step 7 — Register the plugin in the registry
-
-Open `src/lib/plugin-registry.ts`. The file has a comment block at the top with explicit install instructions. Follow Steps 2 and 3 in that comment:
-
-**Step 2** — add a static import near the other plugin imports:
+Add a static import in `src/lib/plugin-registry.ts`:
 ```ts
 import { communityPlugin } from "../../plugins/community/index";
 ```
 
-**Step 3** — add `communityPlugin` to the `ALL_PLUGINS` array.
+Add `communityPlugin` to the `ALL_PLUGINS` array in the same file.
 
-### Step 8 — Run the schema migration
+### Step 6 — Activate the plugin
 
-The plugin creates its own tables on first load via `schema.migrate()`. Restart your dev server and the tables will be created automatically. You can verify in Drizzle Studio:
+Activate via Admin > Settings > Plugins, or add `"community"` to `config.modules.activePlugins` in the database.
 
-```bash
-npm run db:studio
-```
+### Step 7 — Restart the dev server
 
-Confirm these tables exist:
+The plugin creates its 8 database tables automatically via `schema.migrate()` on first cold start. Verify in Drizzle Studio (`npm run db:studio`) that these tables exist:
+
 - `plugin_community_members`
 - `plugin_community_recipes`
 - `plugin_community_recipe_versions`
@@ -128,7 +106,7 @@ Confirm these tables exist:
 - `plugin_community_comments`
 - `plugin_community_contribution_scores`
 
-### Step 9 — Apply navigation (optional)
+### Step 8 — Apply navigation (optional)
 
 Go to **Admin > Plugins > Community** and click **Apply navigation** to add Recipes, Plugins, Themes, Workflows, PNA Cartridges, and Account links to your site navigation.
 
@@ -158,12 +136,10 @@ Go to **Admin > Plugins > Community** and click **Apply navigation** to add Reci
 
 ## Removing this recipe
 
-To cleanly uninstall:
-
-1. Remove `"community"` from `activePlugins` in `pugmill.config.json`
-2. Remove the static import from `src/lib/plugin-loader.ts`
-3. Delete the copied files (plugin directory + src files listed in Step 5)
-4. Drop the plugin tables (the `schema.teardown()` method in `plugins/community/index.ts` will do this if called manually)
+1. Remove `"community"` from `config.modules.activePlugins`
+2. Remove the static import and `ALL_PLUGINS` entry from `src/lib/plugin-registry.ts`
+3. Delete the copied files (see Step 4 above)
+4. Drop the plugin tables by calling `schema.teardown()` from `plugins/community/index.ts` manually, or run the SQL directly
 
 ---
 
@@ -171,6 +147,6 @@ To cleanly uninstall:
 
 The recipe fires no core hooks and registers no core hook listeners. To extend it:
 
-- **On recipe submission:** Add logic after the `db.insert` in `plugins/community/actions/recipes.ts` (e.g. send a notification, post to a webhook)
+- **On recipe submission:** Add logic after the `db.insert` in `plugins/community/actions/recipes.ts`
 - **Scoring automation:** Call `db.update(pluginCommunityContributionScores, ...)` from a cron job or `post:after-save` listener
 - **Moderation:** Add an `approved` column to `plugin_community_recipes` and filter the listing query accordingly
