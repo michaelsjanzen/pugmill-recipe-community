@@ -1,6 +1,6 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { getConfig, updateConfig } from "../../src/lib/config";
+import { getConfig, updateConfig } from "@/lib/config";
 
 const NAV_ITEMS = [
   { label: "Recipes", path: "/recipes" },
@@ -77,24 +77,25 @@ export default async function CommunityAdminPage({
         <ul className="space-y-2 text-sm">
           <li>
             <StatusDot ok={!!githubClientId} />
-            <code className="text-xs bg-zinc-100 px-1 py-0.5 rounded">COMMUNITY_GITHUB_CLIENT_ID</code>
+            <code className="text-xs bg-zinc-800 text-zinc-100 px-1 py-0.5 rounded">COMMUNITY_GITHUB_CLIENT_ID</code>
             {!githubClientId && <span className="text-zinc-400 ml-2">not set</span>}
           </li>
           <li>
             <StatusDot ok={!!githubClientSecret} />
-            <code className="text-xs bg-zinc-100 px-1 py-0.5 rounded">COMMUNITY_GITHUB_CLIENT_SECRET</code>
+            <code className="text-xs bg-zinc-800 text-zinc-100 px-1 py-0.5 rounded">COMMUNITY_GITHUB_CLIENT_SECRET</code>
             {!githubClientSecret && <span className="text-zinc-400 ml-2">not set</span>}
           </li>
           <li>
             <StatusDot ok={!!sessionSecret} />
-            <code className="text-xs bg-zinc-100 px-1 py-0.5 rounded">COMMUNITY_SESSION_SECRET</code>
+            <code className="text-xs bg-zinc-800 text-zinc-100 px-1 py-0.5 rounded">COMMUNITY_SESSION_SECRET</code>
             {!sessionSecret && <span className="text-zinc-400 ml-2">not set</span>}
           </li>
         </ul>
         {!oauthReady && (
-          <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-3 py-2">
-            Add these to your <code>.env.local</code> file. Create a GitHub OAuth app at{" "}
-            github.com/settings/developers with callback URL{" "}
+          <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 dark:text-amber-200 dark:bg-amber-950 dark:border-amber-800 rounded px-3 py-2">
+            Add these as environment variables — <code>.env.local</code> for local dev, or your
+            platform&rsquo;s secrets store (Replit Secrets, Vercel env vars, etc.) for production.
+            Create a GitHub OAuth app at github.com/settings/developers with callback URL{" "}
             <code>/api/community/auth/callback</code>. Generate{" "}
             <code>COMMUNITY_SESSION_SECRET</code> with{" "}
             <code>openssl rand -base64 32</code>.
@@ -124,7 +125,7 @@ export default async function CommunityAdminPage({
                 <tr key={item.path}>
                   <td className="px-3 py-2 font-medium text-zinc-700">{item.label}</td>
                   <td className="px-3 py-2">
-                    <code className="text-xs bg-zinc-100 px-1 py-0.5 rounded">{item.path}</code>
+                    <code className="text-xs bg-zinc-800 text-zinc-100 px-1 py-0.5 rounded">{item.path}</code>
                   </td>
                 </tr>
               ))}
@@ -135,13 +136,13 @@ export default async function CommunityAdminPage({
           <form action={applyNavigation}>
             <button
               type="submit"
-              className="px-4 py-2 rounded-lg text-sm font-semibold bg-zinc-900 text-white hover:bg-zinc-700 transition-colors"
+              className="px-4 py-2 rounded-lg text-sm font-semibold bg-zinc-900 text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300 transition-colors"
             >
               {navApplied ? "Re-apply navigation" : "Apply navigation"}
             </button>
           </form>
           {(navApplied || navSaved) && (
-            <span className="text-sm text-green-700">
+            <span className="text-sm text-green-700 dark:text-green-400">
               {navSaved ? "Navigation updated." : "Already applied."}
             </span>
           )}
@@ -153,7 +154,7 @@ export default async function CommunityAdminPage({
         <p className="text-sm text-zinc-600">
           The homepage shows a built-in hero by default -- no setup needed. If you want a
           fully custom homepage instead, create a CMS page with the slug{" "}
-          <code className="text-xs bg-zinc-100 px-1 py-0.5 rounded">home</code> and publish
+          <code className="text-xs bg-zinc-800 text-zinc-100 px-1 py-0.5 rounded">home</code> and publish
           it; that page will take over automatically.
         </p>
         <ol className="list-decimal list-inside space-y-1 text-sm text-zinc-500">
@@ -165,7 +166,7 @@ export default async function CommunityAdminPage({
           </li>
           <li>
             Set the slug to exactly{" "}
-            <code className="text-xs bg-zinc-100 px-1 py-0.5 rounded">home</code>, type Page, status Published
+            <code className="text-xs bg-zinc-800 text-zinc-100 px-1 py-0.5 rounded">home</code>, type Page, status Published
           </li>
           <li>The built-in hero is replaced automatically</li>
         </ol>

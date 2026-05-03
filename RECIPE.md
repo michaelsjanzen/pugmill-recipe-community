@@ -93,7 +93,9 @@ Add `communityPlugin` to the `ALL_PLUGINS` array in the same file.
 
 Activate via Admin > Settings > Plugins, or add `"community"` to `config.modules.activePlugins` in the database.
 
-### Step 7 — Restart the dev server
+### Step 7 — Restart the server (required, not optional)
+
+After activating the plugin in step 6, **fully restart the server**. `loadPlugins()` caches its initialization promise per process, so toggling activation in the database without a restart leaves the tables uncreated and any subsequent request to `/recipes` will fail with `relation "plugin_community_recipes" does not exist`.
 
 The plugin creates its 8 database tables automatically via `schema.migrate()` on first cold start. Verify in Drizzle Studio (`npm run db:studio`) that these tables exist:
 
@@ -119,6 +121,7 @@ Go to **Admin > Plugins > Community** and click **Apply navigation** to add Reci
 | `COMMUNITY_GITHUB_CLIENT_ID` | Yes | GitHub OAuth App client ID |
 | `COMMUNITY_GITHUB_CLIENT_SECRET` | Yes | GitHub OAuth App client secret |
 | `COMMUNITY_SESSION_SECRET` | Yes | Secret for signing community session JWTs (min 32 chars) |
+| `PRODUCTION_URL` | Recommended | Public site URL (e.g. `https://yourdomain.com`, no trailing slash). The OAuth routes use this to construct the GitHub `redirect_uri`. Required behind any reverse proxy where `request.url` may report an internal hostname instead of your public domain (Replit autoscale, Cloud Run, etc.). Falls back to the request origin when unset. |
 | `AI_ENCRYPTION_KEY` | Recommended | 64-char hex string used by Pugmill to encrypt the GitHub access token at rest. If unset, tokens are stored as plaintext with a server-side warning. Generate with `openssl rand -hex 32`. |
 
 ---

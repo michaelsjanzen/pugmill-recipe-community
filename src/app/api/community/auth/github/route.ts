@@ -6,10 +6,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "GitHub OAuth not configured" }, { status: 503 });
   }
 
-  // Derive the base URL from the incoming request rather than process.env.NEXTAUTH_URL.
-  // This makes the OAuth flow work on any Pugmill host (Replit autoscale, custom domain,
-  // local dev) without depending on a specific env var being set correctly at boot.
-  const origin = new URL(request.url).origin;
+  // Prefer PRODUCTION_URL when set — behind proxies (Replit autoscale, etc.) request.url
+  // can report the internal host instead of the public custom domain, which causes GitHub
+  // to reject the redirect_uri. Fall back to the request origin for local dev.
+  const origin = (process.env.PRODUCTION_URL?.replace(/\/$/, "")) || new URL(request.url).origin;
 
   const params = new URLSearchParams({
     client_id: clientId,

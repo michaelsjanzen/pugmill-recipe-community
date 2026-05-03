@@ -1,12 +1,12 @@
-import type { PugmillPlugin } from "../../src/lib/plugin-registry";
-import { db } from "../../src/lib/db";
+import type { PugmillPlugin } from "@/lib/plugin-registry";
+import { db } from "@/lib/db";
 import { sql } from "drizzle-orm";
 import CommunityAdminPage from "./AdminPage";
 
 export const communityPlugin: PugmillPlugin = {
   id: "community",
   name: "Pugmill Community",
-  version: "0.2.0",
+  version: "0.2.1",
   description: "Recipe registry for plugins, themes, workflows, and PNA cartridges.",
   adminPage: CommunityAdminPage,
 

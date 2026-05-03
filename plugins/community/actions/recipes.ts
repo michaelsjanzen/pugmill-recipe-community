@@ -1,7 +1,7 @@
 "use server";
 
-import { loadPlugins } from "../../../src/lib/plugin-loader";
-import { getCommunityUser } from "../../../src/lib/community-auth";
+import { loadPlugins } from "@/lib/plugin-loader";
+import { getCommunityUser } from "@/lib/community-auth";
 import { db } from "@/lib/db";
 import {
   pluginCommunityRecipes,

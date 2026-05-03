@@ -26,10 +26,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "GitHub OAuth not configured" }, { status: 503 });
   }
 
-  // Derive the base URL from the incoming request, not from process.env.NEXTAUTH_URL.
-  // Must match the redirect_uri sent by the github authorize route exactly,
-  // which also reads it from request.url.
-  const origin = new URL(request.url).origin;
+  // Must match the redirect_uri sent by the github authorize route EXACTLY.
+  // Prefer PRODUCTION_URL when set — behind proxies (Replit autoscale, etc.) request.url
+  // can report the internal host instead of the public custom domain.
+  const origin = (process.env.PRODUCTION_URL?.replace(/\/$/, "")) || new URL(request.url).origin;
 
   // 1. Exchange code for access token
   const tokenRes = await fetch("https://github.com/login/oauth/access_token", {
