@@ -1,9 +1,0 @@
-{
-  "id": "community",
-  "name": "Pugmill Community",
-  "version": "0.2.0",
-  "description": "Recipe registry for plugins, themes, workflows, and PNA cartridges. Members sign in with GitHub to submit and browse community-built extensions.",
-  "author": "Pugmill",
-  "homepage": "https://pugmillcms.dev",
-  "pugmillVersion": "^0.2.0"
-}
