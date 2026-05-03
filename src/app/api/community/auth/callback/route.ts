@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { pluginCommunityMembers } from "../../../../../../plugins/community/schema";
 import { eq } from "drizzle-orm";
 import { createSessionToken } from "@/lib/community-auth";
+import { encryptString } from "@/lib/encrypt";
 
 interface GitHubUser {
   id: number;
@@ -25,19 +26,24 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "GitHub OAuth not configured" }, { status: 503 });
   }
 
+  // Derive the base URL from the incoming request, not from process.env.NEXTAUTH_URL.
+  // Must match the redirect_uri sent by the github authorize route exactly,
+  // which also reads it from request.url.
+  const origin = new URL(request.url).origin;
+
   // 1. Exchange code for access token
   const tokenRes = await fetch("https://github.com/login/oauth/access_token", {
     method: "POST",
     headers: {
       Accept: "application/json",
       "Content-Type": "application/json",
-      "User-Agent": "pugmill-community/0.1",
+      "User-Agent": "pugmill-community/0.2.0",
     },
     body: JSON.stringify({
       client_id: clientId,
       client_secret: clientSecret,
       code,
-      redirect_uri: `${process.env.NEXTAUTH_URL}/api/community/auth/callback`,
+      redirect_uri: `${origin}/api/community/auth/callback`,
     }),
   });
 
@@ -61,7 +67,7 @@ export async function GET(request: NextRequest) {
     headers: {
       Authorization: `token ${accessToken}`,
       Accept: "application/vnd.github+json",
-      "User-Agent": "pugmill-community/0.1",
+      "User-Agent": "pugmill-community/0.2.0",
     },
   });
 
@@ -72,6 +78,11 @@ export async function GET(request: NextRequest) {
   const githubUser = (await userRes.json()) as GitHubUser;
 
   // 3. Upsert member row
+  // Encrypt the GitHub access token at rest using Pugmill's general-purpose
+  // AES-GCM helper (keyed off AI_ENCRYPTION_KEY). If that key is not set,
+  // encryptString returns the plaintext unchanged with a server-side warning,
+  // matching how Pugmill stores AI provider keys.
+  const encryptedAccessToken = encryptString(accessToken);
   const githubIdStr = String(githubUser.id);
   const now = new Date();
 
@@ -85,15 +96,14 @@ export async function GET(request: NextRequest) {
   let memberId: number;
 
   if (existing) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await db
       .update(pluginCommunityMembers)
       .set({
         githubHandle: githubUser.login,
         githubAvatarUrl: githubUser.avatar_url,
-        githubAccessToken: accessToken,
+        githubAccessToken: encryptedAccessToken,
         lastActiveAt: now,
-      } as any)
+      })
       .where(eq(pluginCommunityMembers.githubId, githubIdStr));
     memberId = existing.id;
   } else {
@@ -103,7 +113,7 @@ export async function GET(request: NextRequest) {
         githubId: githubIdStr,
         githubHandle: githubUser.login,
         githubAvatarUrl: githubUser.avatar_url,
-        githubAccessToken: accessToken,
+        githubAccessToken: encryptedAccessToken,
         tier: "apprentice",
         score: 0,
         lastActiveAt: now,
@@ -120,9 +130,7 @@ export async function GET(request: NextRequest) {
   });
 
   // 5. Redirect to /recipes with session cookie
-  const response = NextResponse.redirect(
-    new URL("/recipes", process.env.NEXTAUTH_URL)
-  );
+  const response = NextResponse.redirect(new URL("/recipes", origin));
   response.cookies.set("__pugmill_community", token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",

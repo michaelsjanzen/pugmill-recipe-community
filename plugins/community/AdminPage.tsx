@@ -95,7 +95,7 @@ export default async function CommunityAdminPage({
           <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-3 py-2">
             Add these to your <code>.env.local</code> file. Create a GitHub OAuth app at{" "}
             github.com/settings/developers with callback URL{" "}
-            <code>/community/auth/callback</code>. Generate{" "}
+            <code>/api/community/auth/callback</code>. Generate{" "}
             <code>COMMUNITY_SESSION_SECRET</code> with{" "}
             <code>openssl rand -base64 32</code>.
           </p>

@@ -1,12 +1,20 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import { db } from "@/lib/db";
+import { decryptString } from "@/lib/encrypt";
 import { pluginCommunityMembers } from "../../plugins/community/schema";
 import { eq } from "drizzle-orm";
 
-const SECRET = new TextEncoder().encode(
-  process.env.COMMUNITY_SESSION_SECRET ?? "fallback-dev-secret-change-me"
-);
+// Fail fast if the session secret is missing. A silent fallback string would
+// allow any visitor with knowledge of that string to forge community sessions.
+const rawSecret = process.env.COMMUNITY_SESSION_SECRET;
+if (!rawSecret || rawSecret.length < 32) {
+  throw new Error(
+    "COMMUNITY_SESSION_SECRET must be set to a string of at least 32 characters. " +
+      "Generate one with: openssl rand -base64 32"
+  );
+}
+const SECRET = new TextEncoder().encode(rawSecret);
 const COOKIE_NAME = "__pugmill_community";
 
 export interface CommunitySession {
@@ -19,6 +27,9 @@ export interface CommunitySession {
  * Read the community session cookie, verify the JWT, and return the full
  * member row from the DB. Returns null on any failure (missing cookie,
  * invalid signature, expired token, member not found).
+ *
+ * The stored githubAccessToken is decrypted before returning so all callers
+ * see plaintext. Encryption at rest is handled in the OAuth callback.
  */
 export async function getCommunityUser(): Promise<
   (typeof pluginCommunityMembers.$inferSelect) | null
@@ -37,7 +48,14 @@ export async function getCommunityUser(): Promise<
       .from(pluginCommunityMembers)
       .where(eq(pluginCommunityMembers.id, memberId))
       .limit(1);
-    return rows[0] ?? null;
+
+    const member = rows[0];
+    if (!member) return null;
+
+    if (member.githubAccessToken) {
+      member.githubAccessToken = decryptString(member.githubAccessToken);
+    }
+    return member;
   } catch {
     return null;
   }

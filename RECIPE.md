@@ -119,6 +119,7 @@ Go to **Admin > Plugins > Community** and click **Apply navigation** to add Reci
 | `COMMUNITY_GITHUB_CLIENT_ID` | Yes | GitHub OAuth App client ID |
 | `COMMUNITY_GITHUB_CLIENT_SECRET` | Yes | GitHub OAuth App client secret |
 | `COMMUNITY_SESSION_SECRET` | Yes | Secret for signing community session JWTs (min 32 chars) |
+| `AI_ENCRYPTION_KEY` | Recommended | 64-char hex string used by Pugmill to encrypt the GitHub access token at rest. If unset, tokens are stored as plaintext with a server-side warning. Generate with `openssl rand -hex 32`. |
 
 ---
 
